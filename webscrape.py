@@ -8,7 +8,7 @@ import re
 # ----------------------------
 DB_HOST = '127.0.0.1'
 DB_USER = 'root'
-DB_PASS = 'Hhhmddyjuietmn4ae33$'
+DB_PASS = 'Hhhmddyjuietmn4ae33$' #replace with your own password
 DB_NAME = 'tfrrs_data'
 
 # Connect to MySQL (adjust as needed)
@@ -276,36 +276,6 @@ def time_to_seconds(t):
     else:
         # Unexpected format
         return float('inf')
-
-
-
-
-# def scrape_athlete_fastest_5k(athlete_url):
-#     soup = get_soup(athlete_url)
-#     # Find the table that lists best performances
-#     bests_table = soup.find("table", id="all_bests")
-#     if not bests_table:
-#         return None
-
-#     # Each row represents an event. We look for the row where the first td is "5000"
-#     rows = bests_table.find_all("tr")
-#     for row in rows:
-#         # The first cell should contain the event name
-#         cells = row.find_all("td")
-#         if not cells:
-#             continue
-        
-#         # Check if the first cell matches "5000"
-#         event_cell = cells[0].get_text(strip=True)
-#         if event_cell == "5000":
-#             # We found the 5000m row.
-#             # The time should be in an <a> tag, possibly in the third cell or the next td with a link
-#             # Let's search the row for an <a> tag:
-#             a_tag = row.find("a", href=True)
-#             if a_tag:
-#                 time_str = a_tag.get_text(strip=True)
-#                 return time_str
-#     return None
 
 
 def is_faster(time_a, time_b):
