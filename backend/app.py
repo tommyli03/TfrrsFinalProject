@@ -54,6 +54,47 @@ def xc_nationals_results():
     connection.close()
     return jsonify(data)
 
+@app.route('/team_rankings', methods=['GET'])
+def team_rankings():
+    year = request.args.get('year')  # Get the 'year' parameter from the request
+    query = """
+        SELECT *
+        FROM xc_team_rankings
+        WHERE race_year = %s
+        ORDER BY team_rank ASC;
+    """ if year != 'None' else """
+        SELECT *
+        FROM xc_team_rankings
+        ORDER BY race_year DESC, team_rank ASC;
+    """
+    connection = get_connection()
+    with connection.cursor() as cursor:
+        if year != 'None':
+            cursor.execute(query, (year,))
+        else:
+            cursor.execute(query)
+        data = cursor.fetchall()
+    connection.close()
+    return jsonify(data)
+
+@app.route('/xc_2024_5k_analysis', methods=['GET'])
+def xc_2024_5k_analysis():
+    connection = get_connection()
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT 
+                team, 
+                meet_rank, 
+                avg_5k_time_mm_ss, 
+                team_5k_rank 
+            FROM xc_2024_5k_analysis 
+            ORDER BY team_5k_rank;
+        """)
+        data = cursor.fetchall()
+    connection.close()
+    return jsonify(data)
+
+
 
 
 if __name__ == '__main__':
