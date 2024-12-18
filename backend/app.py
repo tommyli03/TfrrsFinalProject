@@ -37,6 +37,24 @@ def top_performers():
     connection.close()
     return jsonify(data)
 
+@app.route('/xc_nationals_results', methods=['GET'])
+def xc_nationals_results():
+    year = request.args.get('year')
+    connection = get_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f"""
+            SELECT *
+            FROM xc_nationals_results
+            WHERE race_year = %s
+            ORDER BY 
+                CASE WHEN CAST(place AS UNSIGNED) = 0 THEN 1 ELSE 0 END, 
+                CAST(place AS UNSIGNED) ASC;
+        """, (year,))
+        data = cursor.fetchall()
+    connection.close()
+    return jsonify(data)
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

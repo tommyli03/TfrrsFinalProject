@@ -57,6 +57,7 @@ python app.py
 
 frontend: npm install axios bootstrap
 npm install web-vitals
+npm install react-router-dom
 npm start
 
 

@@ -1,33 +1,33 @@
-// src/TopPerformers.js
+// src/XCNationalsResults.js
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const TopPerformers = () => {
-  const [topPerformers, setTopPerformers] = useState([]);
+const XCNationalsResults = () => {
+  const [results, setResults] = useState([]);
   const [selectedYear, setSelectedYear] = useState('');
-  const years = ['None', '2024', '2023', '2022', '2021', '2019']; // Add "None" option
+  const years = ['None', '2024', '2023', '2022', '2021', '2020']; // Add "None" option
 
   useEffect(() => {
-    const fetchTopPerformers = async () => {
+    const fetchResults = async () => {
       if (selectedYear && selectedYear !== 'None') {
         try {
-          const response = await axios.get(`http://localhost:5000/top_performers?year=${selectedYear}`);
-          setTopPerformers(response.data);
+          const response = await axios.get(`http://localhost:5000/xc_nationals_results?year=${selectedYear}`);
+          setResults(response.data);
         } catch (error) {
-          console.error("Error fetching Top Performers:", error);
+          console.error("Error fetching XC Nationals Results:", error);
         }
       } else {
-        setTopPerformers([]); // Clear results if "None" is selected
+        setResults([]); // Clear results if "None" is selected
       }
     };
 
-    fetchTopPerformers();
+    fetchResults();
   }, [selectedYear]);
 
   return (
     <div className="container mt-5">
-      <h1 className="mb-4">Top 10 Performers at Each XC Nationals in Last 5 Years</h1>
+      <h1 className="mb-4">XC Nationals Results</h1>
       
       {/* Filter Dropdown */}
       <div className="mb-4">
@@ -46,27 +46,31 @@ const TopPerformers = () => {
       </div>
       
       {/* Results Table */}
-      {topPerformers.length > 0 && (
+      {results.length > 0 && (
         <table className="table table-striped">
           <thead>
             <tr>
               <th>Year</th>
               <th>Place</th>
               <th>Name</th>
+              <th>Year</th>
               <th>Team</th>
-              <th>Time</th>
               <th>Avg Mile</th>
+              <th>Time</th>
+              <th>Score</th>
             </tr>
           </thead>
           <tbody>
-            {topPerformers.map((performer, index) => (
+            {results.map((result, index) => (
               <tr key={index}>
-                <td>{performer.race_year}</td>
-                <td>{performer.place}</td>
-                <td>{performer.athlete_name}</td>
-                <td>{performer.team}</td>
-                <td>{performer.time_str}</td>
-                <td>{performer.avg_mile}</td>
+                <td>{result.race_year}</td>
+                <td>{result.place}</td>
+                <td>{result.athlete_name}</td>
+                <td>{result.athlete_year}</td>
+                <td>{result.team}</td>
+                <td>{result.avg_mile}</td>
+                <td>{result.time_str}</td>
+                <td>{result.score}</td>
               </tr>
             ))}
           </tbody>
@@ -76,4 +80,4 @@ const TopPerformers = () => {
   );
 };
 
-export default TopPerformers;
+export default XCNationalsResults;
