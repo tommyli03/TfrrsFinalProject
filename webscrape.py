@@ -6,9 +6,9 @@ import re
 # ----------------------------
 # MySQL database configuration
 # ----------------------------
-DB_HOST = '127.0.0.1'
-DB_USER = 'root'
-DB_PASS = 'Hhhmddyjuietmn4ae33$' #replace with your own password
+DB_HOST = 'tfrrs-database.cvyguqokm3xa.us-east-2.rds.amazonaws.com'
+DB_USER = 'admin'
+DB_PASS = 'andrewtommydatabases' #replace with your own password
 DB_NAME = 'tfrrs_data'
 
 # Connect to MySQL (adjust as needed)
@@ -30,15 +30,6 @@ def get_soup(url):
     resp.raise_for_status()
     return BeautifulSoup(resp.text, 'html.parser')
 
-def insert_track_result(year, season, event, place, athlete_name, athlete_year, team, time_str, meet, meet_date, wind):
-    with connection.cursor() as cursor:
-        sql = """
-        INSERT INTO outdoor_qualifying_results 
-        (year, season, event, place, athlete_name, athlete_year, team, time_str, meet, meet_date, wind)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(sql, (year, season, event, place, athlete_name, athlete_year, team, time_str, meet, meet_date, wind))
-    connection.commit()
 
 def insert_xc_result(year, place, name, athlete_year, team, avg_mile, time_str, score, athlete_url, fastest_5k = None):
     with connection.cursor() as cursor:
@@ -50,83 +41,6 @@ def insert_xc_result(year, place, name, athlete_year, team, avg_mile, time_str, 
         cursor.execute(sql, (year, place, name, athlete_year, team, avg_mile, time_str, score, athlete_url, fastest_5k))
     connection.commit()
 
-
-
-
-# ----------------------------
-# Scrape Outdoor Qualifying Data
-# Example: 2024 Qualifying page
-# URL: https://tf.tfrrs.org/lists/4517/2024_NCAA_Division_III_Outdoor_Qualifying_FINAL
-# ----------------------------
-
-# The events you want:
-TRACK_EVENTS = ["100", "200", "400", "800", "1500", "5000", "10000", "110H", "400H", "3000S"]
-
-def scrape_outdoor_qualifying(year, url):
-    soup = get_soup(url)
-    print('here')
-    # Find all event divs. 
-    # Your snippet shows multiple event divs like <div id="event0" name="event0" ...>, <div id="event1" ...>
-    # We’ll search by a pattern. If the ID structure differs, adjust accordingly.
-    event_divs = soup.find_all("div", id=lambda x: x and x.startswith("event"))
-
-    for event_div in event_divs:
-        event_id = event_div.get("id", "")
-        
-        # Attempt to find event name. 
-        # Possibly a nearby element with class "custom-table-title"
-        # If not present, you may know the mapping beforehand or print event_div and inspect.
-        event_title_div = event_div.find("div", class_="custom-table-title")
-        if event_title_div:
-            event_name = event_title_div.get_text(strip=True)
-        else:
-            event_name = event_id  # fallback if event title not found
-
-        # Find the table within this event_div
-        # The table may have id like "myTable6" and classes including "tablesorter".
-        # You can be more specific if needed:
-        table = event_div.find("table", class_="tablesorter")
-        if not table:
-            continue
-
-        # Find tbody with class "body"
-        tbody = table.find("tbody", class_="body")
-        if not tbody:
-            continue
-
-        rows = tbody.find_all("tr", class_="allRows")
-        # Limit to top 500
-        rows = rows[:500]
-        for row in rows:
-            cols = row.find_all("td")
-            # The expected column order based on previous assumptions:
-            # 0: &nbsp; (Place)
-            # 1: Athlete
-            # 2: Year
-            # 3: Team
-            # 4: Time
-            # 5: Meet
-            # 6: Meet Date
-            # 7: Wind (optional)
-            
-            if len(cols) < 8:
-                # Not a valid row?
-                continue
-
-            place_col = cols[0].get_text(strip=True)
-            athlete_col = cols[1].get_text(strip=True)
-            athlete_year_col = cols[2].get_text(strip=True)
-            team_col = cols[3].get_text(strip=True)
-            time_col = cols[4].get_text(strip=True)
-            meet_col = cols[5].get_text(strip=True)
-            meet_date_col = cols[6].get_text(strip=True)
-            wind_col = cols[7].get_text(strip=True) if len(cols) > 7 else ""
-
-            # Insert into DB
-            insert_track_result(year, "Outdoor", event_name, place_col, athlete_col, athlete_year_col, team_col, time_col, meet_col, meet_date_col, wind_col)
-
-        # Be polite to the server
-        time.sleep(1)
 
 # ----------------------------
 # Scrape Cross Country Nationals
@@ -302,11 +216,7 @@ def is_faster(time_a, time_b):
 # Running the Scrapers
 # ----------------------------
 if __name__ == "__main__":
-    # Example: Scrape 2024 Outdoor Qualifying
-    outdoor_url_2024 = "https://tf.tfrrs.org/lists/4517/2024_NCAA_Division_III_Outdoor_Qualifying_FINAL"
-    scrape_outdoor_qualifying(2024, outdoor_url_2024)
 
-    # Example: Scrape 2024 XC Nationals
     # You'll need the URL for each year’s NCAA DIII XC Championship from 2015-2024.
     # For now, just 2024 as given:
     xc_url_2024 = "https://www.tfrrs.org/results/xc/25327/NCAA_Division_III_Cross_Country_Championships#event162754"
