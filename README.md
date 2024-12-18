@@ -44,3 +44,19 @@ connection = pymysql.connect(
     charset='utf8mb4',
     cursorclass=pymysql.cursors.DictCursor
 )
+
+
+# USEFUL SQL COMMANDS:
+USE tfrrs_data;
+SHOW FULL TABLES IN tfrrs_data WHERE TABLE_TYPE LIKE 'VIEW';
+
+# SETUP GUI
+backend: pip install flask flask-mysql
+pip install flask-cors
+python app.py
+
+frontend: npm install axios bootstrap
+npm install web-vitals
+npm start
+
+

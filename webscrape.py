@@ -220,7 +220,11 @@ if __name__ == "__main__":
     # You'll need the URL for each year’s NCAA DIII XC Championship from 2015-2024.
     # For now, just 2024 as given:
     xc_url_2024 = "https://www.tfrrs.org/results/xc/25327/NCAA_Division_III_Cross_Country_Championships#event162754"
-    scrape_xc_nationals(2024, xc_url_2024)
+    xc_url_2023 = "https://www.tfrrs.org/results/xc/23317/NCAA_Division_III_Cross_Country_Championships#event150673"
+    xc_url_2022 = "https://www.tfrrs.org/results/xc/21228/NCAA_Division_III_Cross_Country_Championships#event138442"
+    xc_url_2021 = "https://www.tfrrs.org/results/xc/19297/NCAA_Division_III_Cross_Country_Championships#event127159"
+    xc_url_2020 = "https://www.tfrrs.org/results/xc/16726/NCAA_Division_III_Cross_Country_Championships#event114383"
+    scrape_xc_nationals(2020, xc_url_2020)
 
     # For other years, once you have their URLs, do something like:
     # xc_urls = {
