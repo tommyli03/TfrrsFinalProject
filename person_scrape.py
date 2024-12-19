@@ -36,7 +36,7 @@ def get_athletes(conn):
     return athletes
 
 def insert_athlete_record(conn, athlete_name, team, athlete_url, event, performance):
-    """Insert a single PR record into the Athlete table."""
+    """Insert or update a single PR record into the Athlete table."""
     cursor = conn.cursor()
     query = """
         INSERT INTO Athlete (athlete_name, team, athlete_url, event, performance)
@@ -50,8 +50,7 @@ def insert_athlete_record(conn, athlete_name, team, athlete_url, event, performa
 
 def parse_athlete_page(html):
     """
-    Parse the athlete page HTML to extract PR events and performances.
-    Wind data is ignored as per the request.
+    Parse the athlete page HTML to extract PR events and performances (no wind).
     """
     soup = BeautifulSoup(html, 'html.parser')
     bests_table = soup.find('table', id='all_bests')
@@ -62,14 +61,12 @@ def parse_athlete_page(html):
     rows = bests_table.find_all('tr')
     for row in rows:
         cells = row.find_all('td', recursive=False)
-        # Typically, 4 <td>s per row: event_left, perf_left, event_right, perf_right
         if len(cells) < 4:
             continue
 
         # Left event & performance
         event_left = cells[0].get_text(strip=True)
-        perf_left_td = cells[1]
-        perf_left_a = perf_left_td.find('a')
+        perf_left_a = cells[1].find('a')
         if perf_left_a:
             performance_left = perf_left_a.get_text(strip=True)
             if event_left and performance_left:
@@ -77,8 +74,7 @@ def parse_athlete_page(html):
 
         # Right event & performance
         event_right = cells[2].get_text(strip=True)
-        perf_right_td = cells[3]
-        perf_right_a = perf_right_td.find('a')
+        perf_right_a = cells[3].find('a')
         if perf_right_a:
             performance_right = perf_right_a.get_text(strip=True)
             if event_right and performance_right:
@@ -91,38 +87,39 @@ def main():
     athletes = get_athletes(conn)
 
     total_athletes = len(athletes)
-    print(f"Found {total_athletes} athletes.")
+    half_count = total_athletes // 2
+    # Partner will process the second half
+    athletes_to_process = athletes[half_count:]
 
-    for i, athlete in enumerate(athletes, start=1):
+    print(f"Found {total_athletes} athletes in total. Processing last {total_athletes - half_count} athletes...")
+
+    for i, athlete in enumerate(athletes_to_process, start=1):
         athlete_name = athlete['athlete_name']
         team = athlete['team']
         athlete_url = athlete['athlete_url']
 
+        # Print a status update every 500 athletes
+        if i % 500 == 0:
+            print(f"Processed {i} athletes so far in the second half...")
+
         if not athlete_url:
             continue
 
-        # Print progress every 500 athletes
-        if i % 500 == 0:
-            print(f"Processed {i} athletes...")
-
-        # Fetch athlete page HTML
         try:
             response = requests.get(athlete_url, timeout=10)
             response.raise_for_status()
             html = response.text
         except Exception:
-            # If we can't fetch this athlete's page, just continue to the next
             continue
 
-        # Parse PR data
         prs = parse_athlete_page(html)
 
-        # Insert each PR into Athlete table (no wind field)
+        # Insert/update each PR into Athlete table
         for event, performance in prs:
             insert_athlete_record(conn, athlete_name, team, athlete_url, event, performance)
 
     conn.close()
-    print("✅ Done processing all athletes.")
+    print("✅ Done processing the second half of the athletes.")
 
 if __name__ == "__main__":
     main()

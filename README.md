@@ -86,3 +86,16 @@ CREATE TABLE person (
     wind VARCHAR(10) NULL,
     PRIMARY KEY (athlete_name, team)
 );
+
+CREATE TABLE Athlete (
+    athlete_name VARCHAR(255),
+    team VARCHAR(255),
+    athlete_url VARCHAR(255),
+    event VARCHAR(50),
+    performance VARCHAR(10),
+    PRIMARY KEY (athlete_name, team, event)
+);
+
+
+
+
