@@ -60,63 +60,73 @@ def insert_to_db(dataframe, table_name):
     conn.close()
 
 def scrape_top_500(year):
-    """Scrape NCAA Outdoor Qualifying Results for men."""
-    print("🚀 Starting scrape for gender: Men...")
+    """Scrape NCAA Outdoor Qualifying Results for men, setting top 500 globally."""
+    print("🚀 Starting scrape for NCAA Outdoor Results (Men)...")
     driver = webdriver.Chrome()
     driver.get(URL + "?gender=m")
-    wait = WebDriverWait(driver, 20)
+    wait = WebDriverWait(driver, 30)
+
+    data = []
 
     try:
-        # Extract event name
-        event_name_element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.custom-table-title h3')))
-        event_name = event_name_element.text.strip()
-        print(f"📌 Event Name: {event_name}")
-
-        # Select Top 500
+        # Wait for page to load the dropdown
         limit_dropdown = wait.until(EC.presence_of_element_located((By.ID, "limit")))
+        # Select "Top 500" globally
         Select(limit_dropdown).select_by_value("500")
+        print("✅ Selected Top 500 globally.")
         time.sleep(5)
 
-        # Scroll to the bottom to load all rows
-        print("📜 Scrolling to load all rows...")
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(5)
+        # Once top 500 is selected, all events should now show up to 500 rows
+        # Wait for the gender-specific events to load (they may reload after changing the limit)
+        event_sections = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'div.gender_m')))
+        print(f"📌 Found {len(event_sections)} event sections to scrape.")
 
-        # Extract rows
-        rows = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'tr.allRows')))
-        print(f"✅ Found {len(rows)} rows for men.")
-
-        # Parse row data
-        data = []
-        for row in rows:
+        for event_section in event_sections:
             try:
-                cols = row.find_elements(By.TAG_NAME, 'td')
-                if len(cols) >= 5:
-                    athlete_element = cols[1].find_element(By.TAG_NAME, 'a') if len(cols[1].find_elements(By.TAG_NAME, 'a')) > 0 else None
-                    athlete_name = athlete_element.text.strip() if athlete_element else "N/A"
-                    athlete_url = athlete_element.get_attribute('href') if athlete_element else "N/A"
+                event_name = event_section.find_element(By.CSS_SELECTOR, 'div.custom-table-title h3.font-weight-500').text.strip()
+                print(f"📌 Scraping Event: {event_name}")
 
-                    data.append({
-                        'Year': year,
-                        'Event': event_name,  # Assign event name here
-                        'Rank': cols[0].text.strip() if len(cols) > 0 else "N/A",
-                        'Athlete': athlete_name,
-                        'Athlete_URL': athlete_url,
-                        'Class': cols[2].text.strip() if len(cols) > 2 else "N/A",
-                        'School': cols[3].text.strip() if len(cols) > 3 else "N/A",
-                        'Performance': cols[4].text.strip() if len(cols) > 4 else "N/A",
-                        'Meet': cols[5].text.strip() if len(cols) > 5 else "N/A",
-                        'Meet Date': cols[6].text.strip() if len(cols) > 6 else "N/A",
-                        'Wind': cols[7].text.strip() if len(cols) > 7 else None
-                    })
-                else:
-                    print("⚠️ Skipped row due to insufficient columns.")
+                # Scroll to this event to ensure visibility and let rows load
+                driver.execute_script("arguments[0].scrollIntoView();", event_section)
+                time.sleep(3)
+
+                # Extract all rows for this event
+                rows = event_section.find_elements(By.CSS_SELECTOR, 'tr.allRows')
+                print(f"✅ Found {len(rows)} rows for event: {event_name}.")
+
+                # Parse row data
+                for row in rows:
+                    try:
+                        cols = row.find_elements(By.TAG_NAME, 'td')
+                        if len(cols) >= 5:
+                            athlete_element = cols[1].find_element(By.TAG_NAME, 'a') if cols[1].find_elements(By.TAG_NAME, 'a') else None
+                            athlete_name = athlete_element.text.strip() if athlete_element else "N/A"
+                            athlete_url = athlete_element.get_attribute('href') if athlete_element else "N/A"
+
+                            data.append({
+                                'Year': year,
+                                'Event': event_name,
+                                'Rank': cols[0].text.strip() if len(cols) > 0 else "N/A",
+                                'Athlete': athlete_name,
+                                'Athlete_URL': athlete_url,
+                                'Class': cols[2].text.strip() if len(cols) > 2 else "N/A",
+                                'School': cols[3].text.strip() if len(cols) > 3 else "N/A",
+                                'Performance': cols[4].text.strip() if len(cols) > 4 else "N/A",
+                                'Meet': cols[5].text.strip() if len(cols) > 5 else "N/A",
+                                'Meet Date': cols[6].text.strip() if len(cols) > 6 else "N/A",
+                                'Wind': cols[7].text.strip() if len(cols) > 7 else None
+                            })
+                        else:
+                            print("⚠️ Skipped a row due to insufficient columns.")
+                    except Exception as e:
+                        print(f"❌ Error processing row in event {event_name}: {e}")
+                        continue
 
             except Exception as e:
-                print(f"❌ Error processing row: {e}")
+                print(f"❌ Error processing event: {e}")
                 continue
 
-        print(f"✅ Scraped {len(data)} rows for men.")
+        print(f"✅ Scraped {len(data)} rows total for all events (Men).")
         return pd.DataFrame(data)
 
     except Exception as e:
@@ -125,6 +135,7 @@ def scrape_top_500(year):
 
     finally:
         driver.quit()
+
 
 # ----------------------------
 # Main Execution
