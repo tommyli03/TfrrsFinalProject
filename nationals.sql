@@ -85,3 +85,24 @@ GROUP BY
 ORDER BY
     team_5k_rank; 
 
+SELECT 
+    a.athlete_name,
+    a.team,
+    a.season,
+    a.year,
+    a.time_str AS time_100m,
+    b.time_str AS time_200m
+FROM 
+    outdoor_qualifying_results a
+JOIN 
+    outdoor_qualifying_results b
+ON 
+    a.athlete_name = b.athlete_name
+    AND a.team = b.team
+    AND a.season = b.season
+    AND a.year = b.year
+WHERE 
+    a.event = '100 Meters'
+    AND b.event = '200 Meters'
+ORDER BY 
+    a.athlete_name, a.season, a.year;

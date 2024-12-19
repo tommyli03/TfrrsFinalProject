@@ -77,3 +77,12 @@ npm install react-router-dom
 npm start
 
 
+CREATE TABLE person (
+    athlete_name VARCHAR(255),
+    team VARCHAR(255),
+    athlete_url VARCHAR(255),
+    event VARCHAR(50),
+    performance VARCHAR(10),
+    wind VARCHAR(10) NULL,
+    PRIMARY KEY (athlete_name, team)
+);
